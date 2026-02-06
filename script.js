@@ -6,11 +6,11 @@ const puzzleImages = [
     'images/ft4.jpg'
 ];
 
-// --- CONFIGURACIÓN DE AUDIO (NUEVO) ---
-// Ruta relativa a la carpeta 'sound'
+// --- CONFIGURACIÓN DE AUDIO ---
+// IMPORTANTE: Asegúrate de subir la carpeta "sound" a GitHub para que esto funcione.
 const bgMusic = new Audio('sound/Pausa Y Guardo.mp3'); 
-bgMusic.loop = true; // Para que se repita infinitamente
-bgMusic.volume = 0.6; // Volumen al 60% para que no aturda
+bgMusic.loop = true; 
+bgMusic.volume = 0.6; 
 
 // Variables del juego
 let currentImage = '';
@@ -39,11 +39,9 @@ function setBlur(active) {
     active ? bgLayer.classList.add('blur-effect') : bgLayer.classList.remove('blur-effect');
 }
 
-// Globales para botones HTML
 window.restartGame = function() {
     clearAllPieces(); 
     startGame();
-    // Nota: No detenemos la música aquí para que siga fluyendo si reinicia
 };
 
 window.exitGame = function() {
@@ -51,17 +49,13 @@ window.exitGame = function() {
     showScreen('canvas-1');
     setBlur(false);
     clearInterval(timerInterval);
-    
-    // --- DETENER MÚSICA AL SALIR ---
     bgMusic.pause();
-    bgMusic.currentTime = 0; // Reiniciar canción al principio
+    bgMusic.currentTime = 0; 
 };
 
-// --- FUNCIÓN DE LIMPIEZA TOTAL ---
 function clearAllPieces() {
     const allPieces = document.querySelectorAll('.piece');
     allPieces.forEach(piece => piece.remove());
-    
     if(puzzleBoard) puzzleBoard.innerHTML = '';
     if(piecesContainer) piecesContainer.innerHTML = '';
 }
@@ -69,10 +63,9 @@ function clearAllPieces() {
 // --- FLUJO DEL JUEGO ---
 
 btnPlay.addEventListener('click', () => {
-    // --- INICIAR MÚSICA AL JUGAR ---
-    // Los navegadores requieren interacción del usuario (click) para sonar
+    // Intentar reproducir audio al interactuar
     bgMusic.play().catch(error => {
-        console.log("El navegador bloqueó el autoplay, revisa permisos: ", error);
+        console.log("Audio esperando interacción: ", error);
     });
 
     showScreen('canvas-2');
@@ -80,7 +73,7 @@ btnPlay.addEventListener('click', () => {
     
     setTimeout(() => {
         startGame();
-    }, 5000);
+    }, 4000);
 });
 
 function startGame() {
@@ -88,16 +81,13 @@ function startGame() {
     resetGameVariables();
     clearAllPieces(); 
     
-    // Elegir foto random
     const randomIndex = Math.floor(Math.random() * puzzleImages.length);
     currentImage = puzzleImages[randomIndex];
     
-    // Configurar Preview
     previewOverlay.style.backgroundImage = `url('${currentImage}')`;
     previewOverlay.style.backgroundSize = '450px 450px';
     previewOverlay.style.display = 'block';
     
-    // 3 segundos viendo la imagen
     setTimeout(() => {
         previewOverlay.style.display = 'none';
         createPuzzle();
@@ -106,11 +96,8 @@ function startGame() {
 }
 
 function resetGameVariables() {
-    moves = 0;
-    timeRemaining = 30;
-    correctPieces = 0;
-    updateStats();
-    clearInterval(timerInterval);
+    moves = 0; timeRemaining = 30; correctPieces = 0;
+    updateStats(); clearInterval(timerInterval);
 }
 
 function updateStats() {
@@ -181,7 +168,7 @@ function createPuzzle() {
     });
 }
 
-// --- ARRASTRE ---
+// --- ARRASTRE CORREGIDO (Sin saltos) ---
 
 function makeDraggable(el) {
     const startDrag = (e) => {
@@ -195,9 +182,17 @@ function makeDraggable(el) {
         const offsetX = clientX - rect.left;
         const offsetY = clientY - rect.top;
         
+        // Mover al body
         document.body.appendChild(el);
         el.style.position = 'fixed';
         el.style.zIndex = 1000;
+        
+        // CORRECCIÓN CLAVE: Fijar la posición INMEDIATAMENTE para que no salte
+        el.style.left = (clientX - offsetX) + 'px';
+        el.style.top = (clientY - offsetY) + 'px';
+        // Mantener tamaño visual exacto
+        el.style.width = rect.width + 'px';
+        el.style.height = rect.height + 'px';
         
         const move = (e) => {
             const cx = e.touches ? e.touches[0].clientX : e.clientX;
@@ -211,10 +206,6 @@ function makeDraggable(el) {
             document.removeEventListener('mouseup', end);
             document.removeEventListener('touchmove', move);
             document.removeEventListener('touchend', end);
-            
-            el.style.zIndex = 100;
-            moves++;
-            updateStats();
             
             checkMagnet(el);
         };
@@ -233,20 +224,45 @@ function checkMagnet(piece) {
     const correctIndex = piece.dataset.correctIndex;
     const slot = document.querySelector(`.slot[data-index='${correctIndex}']`);
     
+    let snapped = false;
+
     if (slot) {
         const pRect = piece.getBoundingClientRect();
         const sRect = slot.getBoundingClientRect();
-        const dist = Math.hypot(pRect.left - sRect.left, pRect.top - sRect.top);
+        
+        const pCenterX = pRect.left + pRect.width / 2;
+        const pCenterY = pRect.top + pRect.height / 2;
+        const sCenterX = sRect.left + sRect.width / 2;
+        const sCenterY = sRect.top + sRect.height / 2;
+
+        const dist = Math.hypot(pCenterX - sCenterX, pCenterY - sCenterY);
         
         if (dist < 60) {
             slot.appendChild(piece);
+            // Resetear estilos para encajar en el slot
             piece.style.position = 'absolute';
             piece.style.left = '0';
             piece.style.top = '0';
+            piece.style.width = '100%';
+            piece.style.height = '100%';
             piece.classList.add('snapped');
             
             correctPieces++;
+            snapped = true;
             if (correctPieces === 9) gameWin();
         }
+    }
+    
+    if (!snapped) {
+        // Regresar a la caja si no encaja
+        piecesContainer.appendChild(piece);
+        piece.style.position = 'absolute';
+        piece.style.width = '150px'; 
+        piece.style.height = '150px';
+        piece.style.zIndex = 100;
+        piece.style.left = Math.random() * 200 + 'px';
+        piece.style.top = Math.random() * 30 + 'px';
+        moves++;
+        updateStats();
     }
 }
