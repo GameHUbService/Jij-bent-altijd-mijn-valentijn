@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Puzzle del Verdadero Amor</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="bg-layer"></div>
+
+    <div id="canvas-1" class="screen active">
+        <h1 class="title-top">Puzzle del</h1>
+        <div class="character-container">
+            <img src="images/Foto-portada.jpg" alt="Portada" onerror="this.src='images/Foto-portada.png'">
+        </div>
+        <h2 class="title-main">Verdadero Amor</h2>
+        <button class="btn-primary" id="btn-play">Jugar</button>
+    </div>
+
+    <div id="canvas-2" class="screen hidden">
+        <div class="message-box">
+            <p class="wipe-text">Tienes 30 segundos para ordenar las piezas y descubrir el verdadero amor</p>
+        </div>
+    </div>
+
+    <div id="canvas-3" class="screen hidden">
+        <div class="stats-bar">
+            <div id="moves">Movimientos: 0</div>
+            <div id="timer">00:30</div>
+        </div>
+        <div id="game-area">
+            <div id="preview-overlay"></div>
+            <div id="puzzle-board"></div>
+            <div id="pieces-container"></div>
+        </div>
+    </div>
+
+    <div id="canvas-4" class="screen hidden">
+        <div class="result-box">
+            <h2 class="result-title">Upss. Amor, estuviste muy cerca, inténtalo de nuevo. 💔</h2>
+            <div class="buttons-container">
+                <button class="btn-secondary" onclick="restartGame()">Reiniciar</button>
+                <button class="btn-secondary" onclick="exitGame()">Salir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-5" class="screen hidden">
+        <div class="result-box">
+            <h2 class="result-title">¡Lo lograste! ❤️<br>Has encontrado el verdadero amor.</h2>
+            <div class="buttons-container">
+                <button class="btn-primary" onclick="restartGame()">Jugar de nuevo</button>
+                <button class="btn-secondary" onclick="exitGame()">Salir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
